@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gallery Showcase</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .container {
+            position: relative;
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        .slides {
+            display: none;
+        }
+
+        .slider {
+            width: 100%;
+            height: 500px;
+            object-fit: cover;
+        }
+
+        .prev,
+        .next {
+            cursor: pointer;
+            position: absolute;
+            top: 50%;
+            width: auto;
+            padding: 16px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            user-select: none;
+            transform: translate(0, -50%);
+        }
+
+        .prev {
+            left: 0;
+        }
+
+        .next {
+            right: 0;
+        }
+
+        .markers {
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .dots {
+            cursor: pointer;
+            height: 15px;
+            width: 15px;
+            margin: 5px;
+            background-color: lightgray;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .active,
+        .dots:hover {
+            background-color: gray;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="wrapper">
+        <div class="container">
+            <div class="slides">
+                <img src="https://picsum.photos/1000/500?random=1" class="slider">
+            </div>
+
+            <div class="slides">
+                <img src="https://picsum.photos/1000/500?random=2" class="slider">
+            </div>
+
+            <div class="slides">
+                <img src="https://picsum.photos/1000/500?random=3" class="slider">
+            </div>
+
+            <div class="slides">
+                <img src="https://picsum.photos/1000/500?random=4" class="slider">
+            </div>
+
+            <a class="prev" onclick="shiftSlides(-1)">❮</a>
+            <a class="next" onclick="shiftSlides(1)">❯</a>
+        </div>
+
+        <div class="markers">
+            <span class="dots" onclick="currentSlide(1)"></span>
+            <span class="dots" onclick="currentSlide(2)"></span>
+            <span class="dots" onclick="currentSlide(3)"></span>
+            <span class="dots" onclick="currentSlide(4)"></span>
+        </div>
+    </div>
+
+    <script>
+        let currentIdx = 0;
+        displaySlide(currentIdx);
+
+        function shiftSlides(step) {
+            displaySlide(currentIdx += step);
+        }
+
+        function currentSlide(idx) {
+            displaySlide(currentIdx = idx - 1);
+        }
+
+        function displaySlide(idx) {
+            let i;
+            let slides = document.getElementsByClassName("slides");
+            let dots = document.getElementsByClassName("dots");
+            if (idx >= slides.length) { currentIdx = 0 }
+            if (idx < 0) { currentIdx = slides.length - 1 }
+            for (i = 0; i < slides.length; i++) {
+                slides[i].style.display = "none";
+            }
+            for (i = 0; i < dots.length; i++) {
+                dots[i].className = dots[i].className.replace(" active", "");
+            }
+            slides[currentIdx].style.display = "block";
+            dots[currentIdx].className += " active";
+        }
+    </script>
+
+</body>
+
+</html>
