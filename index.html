@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gallery Showcase</title>
+    <title>Advanced Gallery Showcase</title>
     <style>
         body,
         html {
@@ -15,6 +15,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            background-color: #f0f0f0;
         }
 
         .wrapper {
@@ -29,10 +30,24 @@
             position: relative;
             max-width: 1000px;
             margin: auto;
+            overflow: hidden;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
 
         .slides {
             display: none;
+            animation: fade 1s;
+        }
+
+        @keyframes fade {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
         }
 
         .slider {
@@ -53,14 +68,17 @@
             font-size: 18px;
             user-select: none;
             transform: translate(0, -50%);
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 50%;
+            z-index: 2;
         }
 
         .prev {
-            left: 0;
+            left: 10px;
         }
 
         .next {
-            right: 0;
+            right: 10px;
         }
 
         .markers {
@@ -76,11 +94,36 @@
             background-color: lightgray;
             border-radius: 50%;
             display: inline-block;
+            transition: background-color 0.3s;
         }
 
         .active,
         .dots:hover {
             background-color: gray;
+        }
+
+        .thumbnail-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .thumbnail {
+            width: 100px;
+            height: 60px;
+            margin: 5px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: opacity 0.3s;
+        }
+
+        .thumbnail:hover {
+            opacity: 1;
+        }
+
+        .active-thumbnail {
+            border: 2px solid gray;
+            opacity: 1 !important;
         }
     </style>
 </head>
@@ -115,24 +158,39 @@
             <span class="dots" onclick="currentSlide(3)"></span>
             <span class="dots" onclick="currentSlide(4)"></span>
         </div>
+
+        <div class="thumbnail-container">
+            <img src="https://picsum.photos/100/60?random=1" class="thumbnail" onclick="currentSlide(1)">
+            <img src="https://picsum.photos/100/60?random=2" class="thumbnail" onclick="currentSlide(2)">
+            <img src="https://picsum.photos/100/60?random=3" class="thumbnail" onclick="currentSlide(3)">
+            <img src="https://picsum.photos/100/60?random=4" class="thumbnail" onclick="currentSlide(4)">
+        </div>
     </div>
 
     <script>
         let currentIdx = 0;
+        let slideInterval;
+        let autoSlideEnabled = true;
+
         displaySlide(currentIdx);
 
         function shiftSlides(step) {
+            autoSlideEnabled = false;
             displaySlide(currentIdx += step);
+            resetAutoSlide();
         }
 
         function currentSlide(idx) {
+            autoSlideEnabled = false;
             displaySlide(currentIdx = idx - 1);
+            resetAutoSlide();
         }
 
         function displaySlide(idx) {
             let i;
             let slides = document.getElementsByClassName("slides");
             let dots = document.getElementsByClassName("dots");
+            let thumbnails = document.getElementsByClassName("thumbnail");
             if (idx >= slides.length) { currentIdx = 0 }
             if (idx < 0) { currentIdx = slides.length - 1 }
             for (i = 0; i < slides.length; i++) {
@@ -141,9 +199,64 @@
             for (i = 0; i < dots.length; i++) {
                 dots[i].className = dots[i].className.replace(" active", "");
             }
+            for (i = 0; i < thumbnails.length; i++) {
+                thumbnails[i].classList.remove("active-thumbnail");
+            }
             slides[currentIdx].style.display = "block";
             dots[currentIdx].className += " active";
+            thumbnails[currentIdx].classList.add("active-thumbnail");
         }
+
+        function startAutoSlide() {
+            slideInterval = setInterval(function () {
+                if (autoSlideEnabled) {
+                    shiftSlides(1);
+                }
+            }, 3000);
+        }
+
+        function resetAutoSlide() {
+            clearInterval(slideInterval);
+            startAutoSlide();
+        }
+
+        document.querySelector('.container').addEventListener('mouseenter', function () {
+            autoSlideEnabled = false;
+        });
+
+        document.querySelector('.container').addEventListener('mouseleave', function () {
+            autoSlideEnabled = true;
+        });
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowRight') {
+                shiftSlides(1);
+            } else if (event.key === 'ArrowLeft') {
+                shiftSlides(-1);
+            }
+        });
+
+        let touchStartX = 0;
+        let touchEndX = 0;
+
+        document.querySelector('.container').addEventListener('touchstart', function (e) {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.querySelector('.container').addEventListener('touchend', function (e) {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX) {
+                shiftSlides(1);
+            } else if (touchEndX > touchStartX) {
+                shiftSlides(-1);
+            }
+        }
+
+        startAutoSlide();
     </script>
 
 </body>
