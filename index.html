@@ -47,6 +47,7 @@
             overflow: hidden;
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            background-color: var(--bg-color);
         }
 
         .slides {
@@ -68,6 +69,19 @@
             width: 100%;
             height: 500px;
             object-fit: cover;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
         }
 
         .caption {
@@ -188,6 +202,18 @@
         .speed-control {
             width: 200px;
         }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .slider {
+                height: 300px;
+            }
+
+            .thumbnail {
+                width: 80px;
+                height: 50px;
+            }
+        }
     </style>
 </head>
 
@@ -195,6 +221,7 @@
 
     <div class="wrapper">
         <div class="container">
+            <div id="loading" class="loading">Loading...</div>
             <div class="slides">
                 <img src="https://picsum.photos/1000/500?random=1" class="slider zoomable">
                 <div class="caption">Beautiful Landscape 1</div>
@@ -265,25 +292,32 @@
         }
 
         function displaySlide(idx) {
-            let i;
+            const loading = document.getElementById('loading');
             let slides = document.getElementsByClassName("slides");
             let dots = document.getElementsByClassName("dots");
             let thumbnails = document.getElementsByClassName("thumbnail");
+
             if (idx >= slides.length) { currentIdx = 0 }
             if (idx < 0) { currentIdx = slides.length - 1 }
-            for (i = 0; i < slides.length; i++) {
+
+            for (let i = 0; i < slides.length; i++) {
                 slides[i].style.display = "none";
             }
-            for (i = 0; i < dots.length; i++) {
+            for (let i = 0; i < dots.length; i++) {
                 dots[i].className = dots[i].className.replace(" active", "");
             }
-            for (i = 0; i < thumbnails.length; i++) {
+            for (let i = 0; i < thumbnails.length; i++) {
                 thumbnails[i].classList.remove("active-thumbnail");
             }
-            slides[currentIdx].style.display = "block";
-            dots[currentIdx].className += " active";
-            thumbnails[currentIdx].classList.add("active-thumbnail");
-            updateProgressBar();
+
+            loading.style.display = "block";
+            slides[currentIdx].querySelector('img').onload = () => {
+                loading.style.display = "none";
+                slides[currentIdx].style.display = "block";
+                dots[currentIdx].className += " active";
+                thumbnails[currentIdx].classList.add("active-thumbnail");
+                updateProgressBar();
+            };
         }
 
         function startAutoSlide() {
@@ -312,6 +346,8 @@
                 shiftSlides(1);
             } else if (event.key === 'ArrowLeft') {
                 shiftSlides(-1);
+            } else if (event.key === 'f') {
+                toggleFullScreen();
             }
         });
 
