@@ -6,7 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ultra Advanced Gallery Showcase</title>
     <style>
-        body, html {
+        body,
+        html {
             margin: 0;
             padding: 0;
             font-family: Arial, sans-serif;
@@ -15,6 +16,7 @@
             justify-content: center;
             align-items: center;
             background-color: var(--bg-color);
+            transition: background-color 0.5s ease;
         }
 
         :root {
@@ -47,6 +49,7 @@
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
             background-color: var(--bg-color);
+            transition: background-color 0.5s ease;
         }
 
         .slides {
@@ -90,7 +93,13 @@
             padding: 10px;
         }
 
-        .prev, .next {
+        .description {
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .prev,
+        .next {
             cursor: pointer;
             position: absolute;
             top: 50%;
@@ -173,20 +182,22 @@
             transition: transform 0.2s;
         }
 
-        .zoomable:hover {
-            transform: scale(1.05);
+        .zoomable.zoomed {
+            transform: scale(1.5);
+            cursor: zoom-out;
         }
 
         .controls {
             display: flex;
             justify-content: space-between;
-            width: 250px;
+            width: 300px;
             margin: 20px 0;
         }
 
         .fullscreen-btn,
         .theme-toggle,
-        .play-pause {
+        .play-pause,
+        .randomize-btn {
             background-color: var(--highlight-color);
             color: var(--text-color);
             padding: 10px 15px;
@@ -199,7 +210,12 @@
             width: 200px;
         }
 
-        /* Swipe CSS */
+        .image-counter {
+            margin-top: 10px;
+            font-size: 16px;
+            color: var(--text-color);
+        }
+
         @media (max-width: 768px) {
             .slider {
                 height: 300px;
@@ -209,11 +225,6 @@
                 width: 80px;
                 height: 50px;
             }
-        }
-
-        /* Swipe CSS */
-        .swipe-container {
-            touch-action: none;
         }
     </style>
 </head>
@@ -226,22 +237,34 @@
 
             <div class="slides active">
                 <img src="https://picsum.photos/1000/500?random=1" class="slider zoomable" alt="Slide 1">
-                <div class="caption">Beautiful Landscape 1</div>
+                <div class="caption">
+                    Beautiful Landscape 1
+                    <div class="description">A serene landscape with rolling hills and a golden sunset.</div>
+                </div>
             </div>
 
             <div class="slides">
                 <img src="https://picsum.photos/1000/500?random=2" class="slider zoomable" alt="Slide 2">
-                <div class="caption">Stunning View 2</div>
+                <div class="caption">
+                    Stunning View 2
+                    <div class="description">An awe-inspiring mountain range with a clear sky backdrop.</div>
+                </div>
             </div>
 
             <div class="slides">
                 <img src="https://picsum.photos/1000/500?random=3" class="slider zoomable" alt="Slide 3">
-                <div class="caption">Gorgeous Sunset 3</div>
+                <div class="caption">
+                    Gorgeous Sunset 3
+                    <div class="description">A radiant sunset over a tranquil beach, perfect for unwinding.</div>
+                </div>
             </div>
 
             <div class="slides">
                 <img src="https://picsum.photos/1000/500?random=4" class="slider zoomable" alt="Slide 4">
-                <div class="caption">Majestic Mountains 4</div>
+                <div class="caption">
+                    Majestic Mountains 4
+                    <div class="description">Snow-covered mountains against a brilliant blue sky.</div>
+                </div>
             </div>
 
             <a class="prev" onclick="shiftSlides(-1)">❮</a>
@@ -263,62 +286,98 @@
             <img src="https://picsum.photos/100/60?random=4" class="thumbnail" onclick="currentSlide(4)">
         </div>
 
+        <div class="image-counter">Slide <span id="currentSlide">1</span> of 4</div>
+
         <div class="controls">
-            <button class="fullscreen-btn" onclick="toggleFullScreen()">Full-Screen</button>
+            <button class="fullscreen-btn" onclick="toggleFullScreen()">Full Screen</button>
             <button class="theme-toggle" onclick="toggleTheme()">Dark Mode</button>
             <button class="play-pause" onclick="togglePlayPause()">Pause</button>
+            <button class="randomize-btn" onclick="randomizeSlides()">Randomize</button>
         </div>
 
-        <label for="speed">Slide Speed:</label>
-        <input type="range" id="speed" min="1" max="10" value="3" class="speed-control">
+        <label for="speed">Slide speed (seconds):</label>
+        <input type="range" id="speed" class="speed-control" min="1" max="5" value="3">
     </div>
 
     <script>
         let currentIdx = 0;
-        let slideInterval;
-        let autoSlideSpeed = 3000;
-        let autoSlideEnabled = true;
-        let theme = "light";
         let isPaused = false;
+        let autoSlideSpeed = 3000;
+        let theme = "light";
+        let autoSlideEnabled = true;
+        let slideInterval;
 
-        displaySlide(currentIdx);
+        const slides = document.getElementsByClassName("slides");
+        const dots = document.getElementsByClassName("dots");
+        const thumbnails = document.getElementsByClassName("thumbnail");
+        const loading = document.getElementById("loading");
+        const currentSlideElem = document.getElementById("currentSlide");
 
-        function shiftSlides(step) {
-            displaySlide(currentIdx += step);
-        }
-
-        function currentSlide(idx) {
-            displaySlide(currentIdx = idx - 1);
-        }
-
-        function displaySlide(idx) {
-            const loading = document.getElementById('loading');
-            let slides = document.getElementsByClassName("slides");
-            let dots = document.getElementsByClassName("dots");
-            let thumbnails = document.getElementsByClassName("thumbnail");
-
-            if (idx >= slides.length) { currentIdx = 0 }
-            if (idx < 0) { currentIdx = slides.length - 1 }
+        function shiftSlides(idx) {
+            currentIdx += idx;
+            if (currentIdx >= slides.length) { currentIdx = 0 }
+            if (currentIdx < 0) { currentIdx = slides.length - 1 }
 
             for (let i = 0; i < slides.length; i++) {
                 slides[i].classList.remove("active");
             }
             for (let i = 0; i < dots.length; i++) {
-                dots[i].className = dots[i].className.replace(" active", "");
+                dots[i].classList.remove("active");
             }
             for (let i = 0; i < thumbnails.length; i++) {
                 thumbnails[i].classList.remove("active-thumbnail");
             }
 
             loading.style.display = "block";
-            slides[currentIdx].querySelector('img').onload = () => {
+            const currentImage = slides[currentIdx].querySelector('img');
+            currentImage.onload = () => {
                 loading.style.display = "none";
                 slides[currentIdx].classList.add("active");
-                dots[currentIdx].className += " active";
+                dots[currentIdx].classList.add("active");
                 thumbnails[currentIdx].classList.add("active-thumbnail");
+                currentSlideElem.textContent = currentIdx + 1;
                 updateProgressBar();
+                updateBackgroundColor();
+                playSound();
             };
+            currentImage.click = () => toggleZoom(currentImage);
         }
+
+        function randomizeSlides() {
+            currentIdx = Math.floor(Math.random() * slides.length);
+            shiftSlides(0);
+        }
+
+        function toggleZoom(image) {
+            image.classList.toggle('zoomed');
+        }
+
+        function playSound() {
+            const audio = new Audio('click-sound.mp3');
+            audio.play();
+        }
+
+        function updateProgressBar() {
+            const progressBar = document.getElementById('progress');
+            progressBar.style.width = "0%";
+            setTimeout(() => {
+                progressBar.style.transition = `width ${autoSlideSpeed / 1000}s linear`;
+                progressBar.style.width = "100%";
+            }, 10);
+        }
+
+        function updateBackgroundColor() {
+            const colors = ["#f0f0f0", "#c2e9fb", "#f7d794", "#ffcccc"];
+            document.body.style.backgroundColor = colors[currentIdx % colors.length];
+        }
+
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'ArrowLeft') {
+                shiftSlides(-1);
+            } else if (event.key === 'ArrowRight') {
+                shiftSlides(1);
+            }
+        });
 
         function startAutoSlide() {
             slideInterval = setInterval(function () {
@@ -365,14 +424,6 @@
             document.documentElement.setAttribute("data-theme", theme);
         }
 
-        function updateProgressBar() {
-            const progressBar = document.getElementById('progress');
-            progressBar.style.width = "0%";
-            setTimeout(() => {
-                progressBar.style.transition = `width ${autoSlideSpeed / 1000}s linear`;
-                progressBar.style.width = "100%";
-            }, 10);
-        }
         let touchstartX = 0;
         let touchendX = 0;
 
